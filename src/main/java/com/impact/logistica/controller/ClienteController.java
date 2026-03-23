@@ -59,4 +59,5 @@ public String excluir(@PathVariable Long id, RedirectAttributes attributes) {
         attributes.addFlashAttribute("erro", "Atenção: Este cliente possui fretes (viagens) registrados e não pode ser apagado do sistema.");
     }
     return "redirect:/clientes"; // Garanta que esta é a rota certa para voltar à lista
+    }
 }
