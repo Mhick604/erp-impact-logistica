@@ -1,26 +1,28 @@
 package com.impact.logistica.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Column;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "tb_erp_usuarios") // Nome 100% novo para forçar uma criação do zero!
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String username; // O login (ex: admin, joao.operador)
+    @Column(name = "usr_login", unique = true, nullable = false)
+    private String username; 
 
-    @Column(nullable = false)
-    private String password; // A senha (será encriptada depois)
+    @Column(name = "usr_senha", nullable = false) // Mudando o nome no banco para evitar conflitos
+    private String password; 
 
-    @Column(nullable = false)
-    private String role; // "ROLE_ADMIN" ou "ROLE_USER"
+    @Column(name = "usr_perfil", nullable = false)
+    private String role; 
 
     // GETTERS E SETTERS
     public Long getId() { return id; }
@@ -34,4 +36,5 @@ public class Usuario {
     
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
 }
