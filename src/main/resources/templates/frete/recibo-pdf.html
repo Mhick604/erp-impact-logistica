@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ordem de Serviço - PDF</title>
+    <style>
+        /* Estilos otimizados 100% para renderização em folha A4 no PDF */
+        body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; color: #333333; background-color: #ffffff; margin: 0; padding: 30px; }
+        .a4-container { max-width: 100%; margin: 0 auto; }
+        
+        .header { border-bottom: 2px solid #343a40; padding-bottom: 15px; margin-bottom: 25px; }
+        .header table { width: 100%; }
+        .header td { vertical-align: middle; }
+        
+        .company-name { font-size: 26px; font-weight: 900; color: #343a40; text-transform: uppercase; letter-spacing: 1px; }
+        .os-title { font-size: 24px; font-weight: bold; text-align: right; color: #198754; }
+        
+        .section-title { background-color: #f8f9fa; border-left: 5px solid #198754; padding: 8px 12px; font-weight: 800; font-size: 14px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
+        
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table th { text-align: left; padding: 8px; border-bottom: 1px solid #eeeeee; color: #6c757d; width: 22%; }
+        .info-table td { padding: 8px; border-bottom: 1px solid #eeeeee; font-weight: 700; width: 28%; color: #212529; }
+        
+        .signatures { width: 100%; margin-top: 60px; }
+        .signatures table { width: 100%; text-align: center; }
+        .signatures td { padding: 15px; vertical-align: bottom; }
+        .line { border-top: 1px solid #000; width: 85%; margin: 0 auto 5px auto; }
+    </style>
+</head>
+<body>
+    <div class="a4-container">
+        
+        <div class="header">
+            <table>
+                <tr>
+                    <td>
+                        <div class="company-name" th:text="${configApp != null ? configApp.nomeEmpresa : 'Impact Logística'}">Impact Logística</div>
+                        <div style="color: #6c757d; font-weight: bold;">Documento Oficial de Transporte</div>
+                        <div style="color: #555; margin-top: 5px; font-size: 12px;">
+                            <strong>CNPJ:</strong> <span th:text="${configApp != null and configApp.cnpj != null ? configApp.cnpj : '00.000.000/0001-00'}"></span> | 
+                            <strong>Contato:</strong> <span th:text="${configApp != null and configApp.telefone != null ? configApp.telefone : '(00) 00000-0000'}"></span>
+                        </div>
+                    </td>
+                    <td class="os-title">O.S. Nº <span th:text="${frete.id}">000</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section-title">Dados da Viagem</div>
+        <table class="info-table">
+            <tr>
+                <th>Origem:</th><td th:text="${frete.origem}"></td>
+                <th>Destino:</th><td th:text="${frete.destino}"></td>
+            </tr>
+            <tr>
+                <th>Carga / Material:</th>
+                <td colspan="3" th:text="${frete.materialTransportado != null ? frete.materialTransportado : 'Não especificado'}" style="color: #0d6efd;">Sofá, TV...</td>
+            </tr>
+            <tr>
+                <th>Data Saída:</th><td th:text="${#temporals.format(frete.dataSaida, 'dd/MM/yyyy')}"></td>
+                <th>Status:</th><td th:text="${frete.status}"></td>
+            </tr>
+        </table>
+
+        <div class="section-title">Operação &amp; Equipe</div>
+        <table class="info-table">
+            <tr>
+                <th>Veículo:</th><td th:text="${frete.veiculo != null ? frete.veiculo.placa : ''}"></td>
+                <th>Motorista:</th><td th:text="${frete.motorista != null ? frete.motorista.nome : ''}"></td>
+            </tr>
+            <tr th:each="ajudante : ${frete.ajudantes}">
+                <th>Ajudante:</th><td th:text="${ajudante.nome}"></td>
+                <th>Função:</th><td>Auxiliar Operacional</td>
+            </tr>
+        </table>
+
+        <div class="section-title">Valores e Indicadores</div>
+        <table class="info-table">
+            <tr>
+                <th>Valor do Frete:</th>
+                <td style="color: #198754; font-size: 15px;" th:text="${frete.valorCombinado != null ? 'R$ ' + #numbers.formatDecimal(frete.valorCombinado, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}"></td>
+                <th>Distância Estimada:</th>
+                <td th:text="${frete.kmEstimado != null ? frete.kmEstimado + ' KM' : ''}"></td>
+            </tr>
+        </table>
+
+        <div class="signatures">
+            <table>
+                <tr>
+                    <td style="width: 33%;">
+                        <br/><br/><br/>
+                        <div class="line"></div>
+                        <div><strong>Embarcador / Cliente</strong></div>
+                    </td>
+                    <td style="width: 33%;">
+                        <br/><br/><br/>
+                        <div class="line"></div>
+                        <div><strong th:text="${frete.motorista != null ? frete.motorista.nome : 'Motorista'}">Motorista</strong></div>
+                    </td>
+                    <td style="width: 33%;" th:if="${frete.ajudantes != null and !frete.ajudantes.isEmpty()}">
+                        <br/><br/><br/>
+                        <div class="line"></div>
+                        <div><strong>Equipe de Apoio</strong></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+</body>
+</html>

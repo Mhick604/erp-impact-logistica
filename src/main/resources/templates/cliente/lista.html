@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<!-- 1. PUXA O CABEÇALHO MESTRE -->
+<head th:replace="~{fragments/base :: head('Lista de Clientes')}"></head>
+
+<body class="bg-light">
+
+    <!-- 2. PUXA O MENU LATERAL -->
+    <div th:replace="~{fragments/menu :: sidebar('clientes')}"></div>
+
+    <div class="container mt-5 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-secondary fw-bold">🏢 Clientes (Embarcadores)</h2>
+                <p class="text-muted">Gerencie as empresas para as quais você presta serviço.</p>
+            </div>
+            
+            <!-- BOTÃO NOVO COM COR DINÂMICA -->
+            <a th:href="@{/clientes/novo}" class="btn text-white rounded-pill px-4 shadow"
+               th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important; border: none;'">
+                <i class="bi bi-plus-lg"></i> Novo Cliente
+            </a>
+        </div>
+
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Razão Social</th>
+                                <th>CNPJ</th>
+                                <th>WhatsApp</th>
+                                <th>Endereço</th>
+                                <th class="text-center pe-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c : ${clientes}">
+                                <td class="ps-4 fw-bold text-secondary" th:text="${c.razaoSocial}"></td>
+                                <td th:text="${c.cnpj}"></td>
+                                <td>
+                                    <a th:if="${c.telefoneWhatsapp != null}" 
+                                       th:href="'https://wa.me/55' + ${c.telefoneWhatsapp}" target="_blank" class="text-success text-decoration-none fw-semibold">
+                                        <i class="bi bi-whatsapp"></i> <span th:text="${c.telefoneWhatsapp}"></span>
+                                    </a>
+                                </td>
+                                <td th:text="${c.endereco}" class="small text-muted"></td>
+                                <td class="text-center pe-4">
+                                    <a th:href="@{/clientes/editar/{id}(id=${c.id})}" class="btn btn-sm btn-outline-primary rounded-circle me-1 shadow-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/clientes/excluir/{id}(id=${c.id})}" 
+                                       class="btn btn-sm btn-outline-danger rounded-circle shadow-sm"
+                                       onclick="return confirm('Deseja realmente excluir este cliente?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${clientes.isEmpty()}">
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    Nenhum cliente cadastrado ainda.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. PUXA OS SCRIPTS MESTRES -->
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

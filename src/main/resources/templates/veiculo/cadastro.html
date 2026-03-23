@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<!-- 1. PUXA O CABEÇALHO MESTRE -->
+<head th:replace="~{fragments/base :: head('Cadastro de Veículo')}"></head>
+
+<body class="bg-light text-dark">
+
+    <!-- 2. PUXA O MENU LATERAL ESCURO -->
+    <div th:replace="~{fragments/menu :: sidebar('veiculos')}"></div>
+
+    <!-- AQUI ENTROU A MÁGICA DO WRAPPER RESPONSIVO -->
+    <div class="content-wrapper">
+
+        <div class="container" style="max-width: 900px;">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="card shadow border-0 rounded-4">
+                        
+                        <div class="card-header text-white p-3 rounded-top-4"
+                             th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important;'">
+                            <h4 class="mb-0">
+                                <i class="bi bi-truck"></i>
+                                <span th:text="${veiculo.id == null ? ' Cadastrar Novo Veículo' : ' Editar Veículo'}"></span>
+                            </h4>
+                        </div>
+                        
+                        <div class="card-body p-4 p-md-5">
+                            <form th:action="@{/veiculos/salvar}" th:object="${veiculo}" method="POST">
+                                <input type="hidden" th:field="*{id}">
+                                
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary">Placa</label>
+                                        <input type="text" class="form-control form-control-lg bg-light" th:field="*{placa}" placeholder="ABC-1234" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary">Marca/Modelo</label>
+                                       <input type="text" th:field="*{marcaModelo}" class="form-control form-control-lg bg-light" placeholder="Ex: Volvo FH 540" required>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold text-secondary">Ano</label>
+                                        <input type="number" class="form-control form-control-lg bg-light" th:field="*{ano}">
+                                    </div>
+									<div class="col-md-3">
+									    <label for="kmPorLitro" class="form-label fw-bold">Autonomia Média</label>
+									    <div class="input-group">
+									        <input type="number" 
+									               step="0.1" 
+									               class="form-control" 
+									               id="kmPorLitro" 
+									               th:field="*{kmPorLitro}" 
+									               placeholder="Ex: 4.5">
+									        <span class="input-group-text">km/l</span>
+									    </div>
+									    <div class="form-text text-muted">Consumo estimado de Combustível.</div>
+									</div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold text-secondary">Capacidade (Ton)</label>
+                                        <input type="number" step="0.1" class="form-control form-control-lg bg-light" th:field="*{capacidadeToneladas}">
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary">Renavam</label>
+                                        <input type="text" class="form-control form-control-lg bg-light" th:field="*{renavam}" placeholder="00000000000">
+                                    </div>
+                                    
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold text-secondary">Status da Frota</label>
+                                        <select class="form-select form-select-lg bg-light fw-bold" th:field="*{status}">
+                                            <option value="Operacional">✅ Operacional</option>
+                                            <option value="Em Manutenção">🔧 Em Manutenção</option>
+                                        </select>
+                                    </div>                                
+                                    
+                                    <!-- ============================================== -->
+                                    <!-- NOVA SEÇÃO: CONTROLE DE QUILOMETRAGEM E ALERTA -->
+                                    <!-- ============================================== -->
+                                    <div class="col-12 mt-4 mb-2">
+                                        <hr class="text-muted">
+                                        <h6 class="text-danger fw-bold mb-0"><i class="bi bi-tools"></i> Controle de KM e Alertas de Manutenção</h6>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-secondary">KM Atual</label>
+                                        <div class="input-group input-group-lg">
+                                            <input type="number" step="0.1" class="form-control bg-light" th:field="*{quilometragemAtual}" placeholder="Ex: 120000">
+                                            <span class="input-group-text bg-secondary text-white border-secondary">KM</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-secondary">Avisar Revisão no KM</label>
+                                        <div class="input-group input-group-lg">
+                                            <input type="number" step="0.1" class="form-control bg-light border-danger" th:field="*{kmProximaRevisao}" placeholder="Ex: 130000">
+                                            <span class="input-group-text bg-danger text-white border-danger">KM</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-secondary">Avisar Revisão na Data</label>
+                                        <input type="date" class="form-control form-control-lg bg-light border-danger" th:field="*{dataProximaRevisao}">
+                                    </div>
+                                    <!-- ============================================== -->
+
+                                    <!-- BOTÕES RESPONSIVOS -->
+                                    <div class="col-12 mt-5 text-end border-top pt-4 d-grid gap-2 d-md-block">
+                                        <a th:href="@{/veiculos}" class="btn btn-lg btn-outline-secondary rounded-pill px-4 me-md-2 fw-bold">Cancelar</a>
+                                        <button type="submit" class="btn btn-lg px-5 shadow-sm text-white rounded-pill fw-bold"
+                                                th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#198754'}) + ' !important; border: none;'">
+                                            Salvar Veículo
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. PUXA OS SCRIPTS MESTRES -->
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/base :: head('Gestão de Viagens')}"></head>
+
+<body class="bg-light text-dark">
+
+    <div th:replace="~{fragments/menu :: sidebar('fretes')}"></div>
+
+    <div class="content-wrapper">
+        
+        <div class="container-fluid" style="max-width: 1400px;">
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2 class="text-secondary fw-bold mb-1">🛣️ Gestão de Viagens (OS)</h2>
+                    <p class="text-muted mb-0">Acompanhe o status das entregas e orçamentos em tempo real.</p>
+                </div>
+                
+                <div class="d-flex flex-column flex-md-row gap-2">
+                    <a th:href="@{/fretes/novo}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold py-2 text-nowrap d-flex align-items-center justify-content-center">
+                        <i class="bi bi-plus-lg me-2"></i> Nova Viagem
+                    </a>
+                    <a th:href="@{/fretes/exportar}" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold py-2 text-nowrap d-flex align-items-center justify-content-center">
+                        <i class="bi bi-file-earmark-excel-fill me-2"></i> Exportar Excel
+                    </a>
+                </div>
+            </div> <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        
+                        <table class="table table-hover mb-0 align-middle text-nowrap">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-4">ID / Saída</th>
+                                    <th>Cliente / Rota</th>
+                                    <th>Equipe / Veículo</th>
+                                    <th>Valor / KM</th>
+                                    <th>Status</th>
+                                    <th class="text-center pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="f : ${fretes}">
+                                    <td class="ps-4">
+                                        <span class="fw-bold" th:text="'#' + ${f.id}"></span><br>
+                                        <small class="text-muted" th:text="${#temporals.format(f.dataSaida, 'dd/MM/yyyy')}"></small>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary" th:text="${f.cliente != null ? f.cliente.razaoSocial : 'Cliente não informado'}"></strong><br>
+                                        <small class="text-secondary" th:text="${f.origem + ' ➔ ' + f.destino}"></small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <div>
+                                                <i class="bi bi-person-badge text-primary"></i> 
+                                                <span class="fw-bold" th:text="${f.motorista != null ? f.motorista.nome : 'Sem motorista'}"></span>
+                                            </div>
+                                            <div th:if="${f.ajudantes != null and !f.ajudantes.isEmpty()}">
+                                                <i class="bi bi-people text-secondary"></i> 
+                                                <small class="text-muted">                                             
+                                                    <span th:each="ajudante, iterStat : ${f.ajudantes}" 
+                                                          th:text="${ajudante.nome} + ${!iterStat.last ? ', ' : ''}">
+                                                    </span>
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mt-1">
+                                                <i class="bi bi-truck text-muted"></i> 
+                                                <span class="badge bg-light text-dark border" th:text="${f.veiculo != null ? f.veiculo.placa : 'S/ Placa'}"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success" th:text="${f.valorCombinado != null ? 'R$ ' + #numbers.formatDecimal(f.valorCombinado, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}"></strong><br>
+                                        <small class="text-muted" th:text="${f.kmEstimado != null ? f.kmEstimado + ' KM' : ''}"></small>
+                                    </td>
+                                    <td>
+                                        <span th:if="${f.status == 'Pendente'}" class="badge rounded-pill bg-warning text-dark shadow-sm">PENDENTE</span>
+                                        <span th:if="${f.status == 'Em Viagem'}" class="badge rounded-pill bg-primary shadow-sm">EM VIAGEM</span>
+                                        <span th:if="${f.status == 'Finalizado'}" class="badge rounded-pill bg-success shadow-sm">FINALIZADO</span>
+                                        <span th:if="${f.status == 'Cancelado'}" class="badge rounded-pill bg-danger shadow-sm">CANCELADO</span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <a th:href="@{/fretes/imprimir/{id}(id=${f.id})}" target="_blank" class="btn btn-sm btn-outline-dark rounded-circle me-1" title="Imprimir OS">
+                                            <i class="bi bi-printer"></i>
+                                        </a>
+                                        <a th:href="@{/fretes/editar/{id}(id=${f.id})}" class="btn btn-sm btn-outline-primary rounded-circle" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a th:href="@{/fretes/excluir/{id}(id=${f.id})}" class="btn btn-sm btn-outline-danger rounded-circle ms-1"
+                                           onclick="return confirm('Excluir esta OS permanentemente?')" title="Excluir">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(fretes)}">
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-geo-alt fs-1 d-block mb-2 text-secondary"></i>
+                                        Nenhuma viagem registrada.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

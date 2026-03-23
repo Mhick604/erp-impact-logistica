@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/base :: head('Lançar Viagem')}"></head>
+
+<body class="bg-light text-dark">
+
+    <div th:replace="~{fragments/menu :: sidebar('fretes')}"></div>
+    
+    <!-- AQUI ENTROU A MÁGICA DO WRAPPER RESPONSIVO -->
+    <div class="content-wrapper">
+        
+        <div class="container" style="max-width: 1000px;">
+            <div class="card shadow border-0 rounded-4">
+                
+                <div class="card-header p-3 rounded-top-4 text-white" 
+                     th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important;'">
+                    <h4 class="mb-0">
+                        <i class="bi bi-map"></i> 
+                        <span th:text="${frete.id == null ? ' Nova Ordem de Serviço' : ' Editar Viagem'}">Lançar Nova Viagem</span>
+                    </h4>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form th:action="@{/fretes/salvar}" th:object="${frete}" method="POST">
+                        <input type="hidden" th:field="*{id}">
+                        
+                        <div class="row g-4">
+                            <!-- DADOS BÁSICOS DA VIAGEM -->
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-secondary">🏢 Cliente (Embarcador)</label>
+                                <select class="form-select form-select-lg bg-light" th:field="*{cliente}" required>
+                                    <option value="">-- Selecione o Cliente Cadastrado --</option>
+                                    <option th:each="c : ${listaClientes}" th:value="${c.id}" th:text="${c.razaoSocial}"></option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-secondary">📍 Origem (Cidade/UF)</label>
+                                <input type="text" class="form-control form-control-lg bg-light" th:field="*{origem}" required>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-secondary">🏁 Destino (Cidade/UF)</label>
+                                <input type="text" class="form-control form-control-lg bg-light" th:field="*{destino}" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-success">💰 Valor do Frete (R$)</label>
+                                <input type="number" step="0.01" class="form-control form-control-lg border-success bg-light" th:field="*{valorCombinado}" required>
+                            </div>
+
+                            <!-- SELEÇÃO DE EQUIPE (MÚLTIPLA COM SWITCHES) -->
+                            <div class="col-md-12 mt-4">
+                                <div class="card border-0 bg-light rounded-4 shadow-sm">
+                                    <div class="card-body p-4">
+                                        <label class="form-label fw-bold text-primary mb-3">
+                                            <i class="bi bi-people-fill me-2"></i>Equipe da Operação
+                                        </label>
+                                        <p class="text-muted small mb-3">Ligue a chave ao lado dos colaboradores que farão esta viagem.</p>
+                                        
+                                        <div class="row g-3">
+                                            <!-- Repete para cada funcionário/motorista -->
+                                            <div class="col-md-4" th:each="func : ${listaMotoristas}">
+                                                <div class="form-check form-switch p-3 bg-white border rounded shadow-sm d-flex align-items-center" style="min-height: 80px;">
+                                                    
+                                                    <!-- A MÁGICA: Manda a lista de IDs para o campo da equipe -->
+                                                    <input class="form-check-input fs-3 mt-0 ms-0 me-3" type="checkbox" 
+                                                           th:field="*{ajudantes}" th:value="${func.id}" th:id="${'func_' + func.id}" style="cursor: pointer;">
+                                                    
+                                                    <label class="form-check-label w-100" th:for="${'func_' + func.id}" style="cursor: pointer;">
+                                                        <div class="fw-bold text-dark text-truncate" th:text="${func.nome}">João da Silva</div>
+                                                        <span class="badge" 
+                                                              th:classappend="${func.cargo == 'Motorista' ? 'bg-primary' : (func.cargo == 'Ajudante' ? 'bg-warning text-dark' : 'bg-secondary')}"
+                                                              th:text="${func.cargo ?: 'Sem Cargo'}">Motorista</span>
+                                                    </label>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- LOGÍSTICA E DATAS -->
+                            <div class="col-md-6 mt-4">
+                                <label class="form-label fw-bold text-primary">🚛 Veículo (Placa)</label>
+                                <select class="form-select form-select-lg border-primary" th:field="*{veiculo}" required>
+                                    <option value="">-- Escolha um Caminhão --</option>
+                                    <option th:each="v : ${listaVeiculos}" th:value="${v.id}" th:text="${v.placa + ' - ' + v.marcaModelo}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mt-4">
+                                <label class="form-label fw-bold text-secondary">📅 Data de Saída</label>
+                                <input type="date" class="form-control form-control-lg bg-light" th:field="*{dataSaida}" required>
+                            </div>
+
+                            <div class="col-md-4 mt-4">
+                                <label class="form-label fw-bold text-secondary">Distância (KM Estimado)</label>
+                                <input type="number" step="0.1" class="form-control bg-light" th:field="*{kmEstimado}">
+                            </div>
+
+                            <div class="col-md-4 mt-4">
+                                <label class="form-label fw-bold text-secondary">Custo Ajudante/Chapa (R$)</label>
+                                <input type="number" step="0.01" class="form-control bg-light" th:field="*{valorAjudante}">
+                            </div>
+
+                            <div class="col-md-4 mt-4">
+                                <label class="form-label fw-bold text-secondary">Status da Viagem</label>
+                                <select class="form-select fw-bold bg-light" th:field="*{status}">
+                                    <option value="AGUARDANDO" class="text-secondary">⏳ Aguardando Saída</option>
+                                    <option value="EM_TRANSITO" class="text-primary">🚚 Em Trânsito</option>
+                                    <option value="ENTREGUE" class="text-success">✅ Entregue</option>
+                                    <option value="CANCELADO" class="text-danger">❌ Cancelado</option>
+                                </select>
+                            </div>
+                            
+                            <!-- BOTÕES RESPONSIVOS (Um sobre o outro no mobile) -->
+                            <div class="col-12 mt-5 text-end border-top pt-4 d-grid gap-2 d-md-block">
+                                <a th:href="@{/fretes}" class="btn btn-lg btn-outline-secondary px-4 me-md-2 rounded-pill fw-bold">Cancelar</a>
+                                
+                                <button type="submit" class="btn btn-lg px-5 shadow-sm rounded-pill text-white fw-bold"
+                                        th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#198754'}) + ' !important; border: none;'">
+                                    Gravar Ordem de Serviço 💾
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>

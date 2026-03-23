@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<!-- 1. PUXA O CABEÇALHO MESTRE -->
+<head th:replace="~{fragments/base :: head('Frota de Veículos')}"></head>
+
+<body class="bg-light text-dark">
+
+    <!-- 2. PUXA O MENU LATERAL DARK MODE -->
+    <div th:replace="~{fragments/menu :: sidebar('veiculos')}"></div>
+
+    <!-- 1. CORREÇÃO: WRAPPER RESPONSIVO -->
+    <div class="content-wrapper">
+        
+        <div class="container-fluid" style="max-width: 1200px;">
+            
+            <!-- 2. CORREÇÃO: CABEÇALHO EM COLUNA NO CELULAR, LINHA NO PC -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2 class="text-secondary fw-bold mb-1">🚛 Frota de Veículos</h2>
+                    <p class="text-muted mb-0">Gerencie os caminhões, carretas e manutenções.</p>
+                </div>
+                
+                <!-- BOTÃO ESTICADO NO CELULAR (d-grid) -->
+                <div class="d-grid d-md-block">
+                    <a th:href="@{/veiculos/novo}" class="btn text-white rounded-pill px-4 shadow-sm fw-bold py-2"
+                       th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important; border: none;'">
+                        <i class="bi bi-plus-lg me-1"></i> Novo Veículo
+                    </a>
+                </div>
+            </div>
+
+            <!-- ALERTA DE MANUTENÇÃO INTELIGENTE (SÓ APARECE SE TIVER ATRASO) -->
+            <div th:if="${alertasManutencao != null and not #lists.isEmpty(alertasManutencao)}" class="alert alert-danger shadow-sm border-0 rounded-4 mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-1 me-3 text-danger"></i>
+                    <div>
+                        <h5 class="alert-heading fw-bold mb-1 text-danger">Atenção! Revisão Pendente na Frota</h5>
+                        <p class="mb-0 text-dark">Os seguintes veículos atingiram o limite de KM ou Data para revisão:</p>
+                        <hr class="my-2 border-danger opacity-25">
+                        <ul class="mb-0 text-dark fw-bold">
+                            <!-- Faz um loop listando todos os veículos atrasados -->
+                            <li th:each="v : ${alertasManutencao}" class="mb-1">
+                                <span th:text="${v.marcaModelo + ' (Placa: ' + v.placa + ')'}"></span> 
+                                <a th:href="@{/veiculos/editar/{id}(id=${v.id})}" class="text-danger ms-2 text-decoration-underline small"><i class="bi bi-tools"></i> Agendar Oficina</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-0">
+                    
+                    <!-- 3. CORREÇÃO: TABELA RESPONSIVA COM TEXT-NOWRAP -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-dark text-nowrap">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-4">Placa / Veículo</th>
+                                    <th>Renavam</th>
+                                    <th>Capacidade (Ton)</th>
+                                    <th>Status</th>
+                                    <th class="text-center pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="v : ${veiculos}">
+                                    <td class="ps-4">
+                                        <span class="fw-bold" th:text="${v.placa}"></span><br>
+                                        <small class="text-muted" th:text="${v.marcaModelo}"></small>
+                                    </td>
+                                    <td th:text="${v.renavam != null and v.renavam != '' ? v.renavam : '---'}"></td>
+                                    <td th:text="${v.capacidadeToneladas != null ? v.capacidadeToneladas + ' Ton' : '---'}"></td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-success" th:if="${v.status == 'Operacional'}">Operacional</span>
+                                        <span class="badge rounded-pill bg-danger" th:if="${v.status == 'Em Manutenção'}">Manutenção</span>
+                                    </td>
+                                    
+                                    <!-- AQUI ESTÃO OS 3 BOTÕES JUNTOS E NO LUGAR CERTO -->
+                                    <td class="text-center pe-4">
+                                        <a th:href="@{/manutencoes/veiculo/{id}(id=${v.id})}" class="btn btn-sm btn-outline-warning text-dark rounded-circle shadow-sm me-1" title="Oficina e Manutenção">
+                                            <i class="bi bi-tools"></i>
+                                        </a>
+                                        <a th:href="@{/veiculos/editar/{id}(id=${v.id})}" class="btn btn-sm btn-outline-primary rounded-circle shadow-sm me-1" title="Editar Veículo">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a th:href="@{/veiculos/excluir/{id}(id=${v.id})}" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" 
+                                           onclick="return confirm('Excluir veículo da frota permanentemente?')" title="Excluir Veículo">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <tr th:if="${#lists.isEmpty(veiculos)}">
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-truck-flatbed fs-1 d-block mb-2 text-secondary"></i>
+                                        Nenhum veículo cadastrado na frota.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. PUXA OS SCRIPTS MESTRES -->
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

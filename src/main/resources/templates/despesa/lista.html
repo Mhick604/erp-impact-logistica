@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/base :: head('Controle de Despesas')}"></head>
+
+<body class="bg-light">
+
+    <div th:replace="~{fragments/menu :: sidebar('despesas')}"></div>
+
+    <div class="container mt-5 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-secondary fw-bold">💸 Controle de Despesas</h2>
+                <p class="text-muted">Gerencie os custos operacionais e manutenção da frota.</p>
+            </div>
+            
+            <a th:href="@{/despesas/novo}" class="btn text-white rounded-pill px-4 shadow"
+               th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#dc3545'}) + ' !important; border: none;'">
+                <i class="bi bi-plus-circle"></i> Lançar Despesa
+            </a>
+        </div>
+
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Data</th>
+                                <th>Tipo / Categoria</th>
+                                <th>Vínculo (Viagem)</th>
+                                <th>Valor</th>
+                                <th>Observação</th>
+                                <th class="text-center pe-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="despesa : ${despesas}">
+                                <td class="ps-4 fw-bold text-secondary" th:text="'#' + ${despesa.id}"></td>
+                                <td th:text="${despesa.data != null ? #temporals.format(despesa.data, 'dd/MM/yyyy') : '--/--/----'}"></td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" th:text="${despesa.tipo}">Óleo Diesel</span>
+                                </td>
+                                <td>
+                                    <span th:if="${despesa.frete != null}" class="text-primary fw-semibold">
+                                        <i class="bi bi-hash"></i><span th:text="${despesa.frete.id}"></span> 
+                                        (<span th:text="${despesa.frete.destino}"></span>)
+                                    </span>
+                                    <span th:unless="${despesa.frete != null}" class="text-muted small fst-italic">Avulso</span>
+                                </td>
+                                <td>
+                                    <strong class="text-danger" th:text="${'R$ ' + #numbers.formatDecimal(despesa.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</strong>
+                                </td>
+                                <td class="text-muted small" th:text="${despesa.observacao}">---</td>
+                                <td class="text-center pe-4">
+                                    <a th:href="@{/despesas/editar/{id}(id=${despesa.id})}" class="btn btn-sm btn-outline-primary rounded-circle me-1 shadow-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/despesas/excluir/{id}(id=${despesa.id})}" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" 
+                                       onclick="return confirm('Deseja realmente excluir esta despesa?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${#lists.isEmpty(despesas)}" class="text-center py-5 text-muted">
+                    <i class="bi bi-check2-circle fs-1 d-block mb-2 text-success"></i>
+                    Nenhuma despesa registrada ainda. Ótimo sinal! 😅
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

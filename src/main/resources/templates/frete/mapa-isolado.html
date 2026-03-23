@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body, html, #map { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([-14.235, -51.925], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        var rotaLayer, markers = [];
+
+        // Esta função será chamada pela página principal
+        window.desenharRota = function(lat1, lon1, lat2, lon2, geojson) {
+            if(rotaLayer) map.removeLayer(rotaLayer);
+            markers.forEach(m => map.removeLayer(m));
+            
+            rotaLayer = L.geoJSON(geojson, {style: {color: '#0d6efd', weight: 6}}).addTo(map);
+            map.fitBounds(rotaLayer.getBounds(), {padding: [30, 30]});
+            
+            markers = [L.marker([lat1, lon1]).addTo(map), L.marker([lat2, lon2]).addTo(map)];
+        };
+    </script>
+</body>
+</html>

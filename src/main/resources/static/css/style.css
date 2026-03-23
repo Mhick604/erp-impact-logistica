@@ -1,0 +1,118 @@
+/* ==========================================================================
+   ESTILOS DO DASHBOARD COM FUNDO E PAINEL FLUTUANTE
+   ========================================================================== */
+
+.dashboard-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; 
+}
+
+.dashboard-background .carousel-inner,
+.dashboard-background .carousel-item {
+    height: 100vh;
+}
+
+.floating-dashboard-panel {
+    position: relative;
+    z-index: 10;
+    padding-top: 5vh; 
+    padding-bottom: 5vh;
+    min-height: 100vh;
+}
+
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+}
+
+.glass-container {
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-container .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-container .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE E MENU MOBILE
+   ========================================================================== */
+
+/* Padrão Desktop */
+.content-wrapper {
+    margin-left: 80px; 
+    padding: 2rem 1rem;
+    transition: margin-left 0.3s ease;
+}
+
+/* Oculta a Bottom Bar no Desktop por padrão */
+.mobile-bottom-bar {
+    display: none;
+}
+
+/* --- MÁGICA PARA TELAS DE CELULAR (até 768px) --- */
+@media (max-width: 768px) {
+    
+    .content-wrapper {
+        margin-left: 0 !important;
+        padding: 1rem 0.5rem; 
+        padding-bottom: 80px !important; 
+    }
+
+    .sidebar-desktop {
+        display: none !important;
+    }
+
+    .dashboard-background {
+        left: 0;
+        width: 100%;
+    }
+    
+    .floating-dashboard-panel {
+        margin-top: 1rem;
+    }
+    
+    .mobile-bottom-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #212529; 
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        z-index: 1050;
+        justify-content: space-around;
+        padding: 0.5rem 0;
+    }
+
+    .mobile-bottom-bar a {
+        color: #adb5bd;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .mobile-bottom-bar a i {
+        font-size: 1.25rem;
+        margin-bottom: 2px;
+    }
+
+    .mobile-bottom-bar a.active {
+        color: #0d6efd; 
+    }
+}

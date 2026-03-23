@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/base :: head('Painel ERP')}"></head>
+
+<body class="bg-light">
+
+    <style>
+        .dashboard-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+        
+        /* A MÁGICA DEFINITIVA CONTRA A "TEIMOSIA" DO LAYOUT */
+        .dashboard-wrapper {
+            padding-top: 3rem;
+            padding-bottom: 5rem;
+            padding-left: 15px; /* Mobile: Margem normal */
+            padding-right: 15px;
+            width: 100%;
+        }
+
+        /* NO COMPUTADOR: Enchimento interno à esquerda para não brigar com o Bootstrap */
+        @media (min-width: 992px) {
+            .dashboard-wrapper {
+                padding-left: 100px !important; /* Liberta o espaço exato do menu lateral! */
+                padding-right: 2rem !important;
+            }
+        }
+
+        /* O painel principal fica mais branco para leitura */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 1rem;
+        }
+        
+        /* Os cartões de viagem ficam mais transparentes para ver a imagem de fundo */
+        .glass-trip-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .glass-trip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 3rem rgba(0,0,0,0.3) !important;
+        }
+        
+        /* Container escuro para o formulário de KM */
+        .glass-form-container {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 1rem;
+        }
+        
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+    </style>
+
+    <div th:replace="~{fragments/menu :: sidebar('dashboard')}"></div>
+
+    <div id="heroCarousel" class="carousel slide dashboard-background" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+        </div>
+         
+        <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+                <img class="d-block w-100 h-100 object-fit-cover" src="https://i.pinimg.com/control1/1200x/3e/fc/86/3efc861d75802688624af181faa55705.jpg" style="filter: brightness(0.6);">
+            </div>
+            <div class="carousel-item h-100">
+                <img class="d-block w-100 h-100 object-fit-cover" src="https://i.pinimg.com/1200x/57/42/3f/57423f8b5bdce6ef9d8338c1980bc7a9.jpg" style="filter: brightness(0.6);">
+            </div>
+            <div class="carousel-item h-100">
+                <img class="d-block w-100 h-100 object-fit-cover" src="https://i.pinimg.com/1200x/70/46/bd/7046bd709a640bc6da2abf0567055842.jpg" style="filter: brightness(0.6);">
+            </div>
+        </div>
+    </div>
+
+    <main class="dashboard-wrapper mx-auto" style="max-width: 1400px;">
+        
+        <header class="mb-4 text-center">
+            <h2 class="text-white fw-bold text-shadow">
+                👋 Bem-vindo ao Centro de Controle, 
+                <span class="text-warning" th:text="${configApp != null and configApp.nomeEmpresa != null ? configApp.nomeEmpresa : 'Administrador'}">Tom Transportes</span>!
+            </h2>
+            <p class="text-light text-shadow">
+                Visão geral e saúde financeira <span th:text="${configApp != null and configApp.cnpj != null ? '(CNPJ: ' + configApp.cnpj + ')' : 'da transportadora'}"></span>.
+            </p>
+        </header>
+        
+        <div th:if="${mensagemSucesso}" class="alert alert-success alert-dismissible fade show shadow-sm fw-bold rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${mensagemSucesso}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${mensagemAviso}" class="alert alert-warning alert-dismissible fade show shadow-sm fw-bold text-dark rounded-4 border-warning mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2 fs-5"></i> <span th:text="${mensagemAviso}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div th:if="${mensagemErro}" class="alert alert-danger alert-dismissible fade show shadow-sm fw-bold rounded-4 mb-4" role="alert">
+            <i class="bi bi-x-circle-fill me-2"></i> <span th:text="${mensagemErro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div class="glass-container p-4 p-md-5 mb-5 shadow-lg">
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+                <h5 class="text-secondary fw-bold mb-0">
+                    <i class="bi bi-cash-coin text-warning me-2"></i> Inteligência Financeira
+                </h5>
+                <a th:href="@{/relatorio/fechamento-mes}" class="btn btn-success btn-sm fw-bold rounded-pill shadow-sm text-nowrap px-3">
+                    <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Fechamento do Mês p/ Contador
+                </a>
+            </div>
+            
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 border-start border-5 border-info bg-white h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-1 fw-bold small text-uppercase">Faturamento Bruto</p>
+                            <h3 class="text-info fw-bold mb-0" th:text="${faturamento != null ? 'R$ ' + #numbers.formatDecimal(faturamento, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">R$ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 border-start border-5 border-danger bg-white h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-1 fw-bold small text-uppercase">Despesas Totais</p>
+                            <h3 class="text-danger fw-bold mb-0" th:text="${despesas != null ? 'R$ ' + #numbers.formatDecimal(despesas, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">R$ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 border-start border-5 border-success bg-white h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-1 fw-bold small text-uppercase">Lucro Líquido</p>
+                            <h3 class="text-success fw-bold mb-0" th:text="${lucroLiquido != null ? 'R$ ' + #numbers.formatDecimal(lucroLiquido, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">R$ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4" th:if="${(alertasCnh != null and !alertasCnh.isEmpty()) or (alertasVeiculos != null and !alertasVeiculos.isEmpty())}">
+                <div class="col-12"><h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Alertas Críticos</h5></div>
+                
+                <div class="col-md-6" th:if="${alertasCnh != null and !alertasCnh.isEmpty()}">
+                    <div class="card border-0 shadow-sm border-start border-5 border-danger rounded-4 mb-3 bg-white">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-danger">🪪 Documentação de Motorista</h6>
+                            <ul class="list-unstyled mb-0 small text-muted overflow-auto" style="max-height: 120px; scrollbar-width: thin;">
+                                <li th:each="m : ${alertasCnh}" class="mb-1">
+                                    ⚠️ <strong th:text="${m.nome}"></strong> - Vence em: 
+                                    <span class="text-danger fw-bold" th:text="${#temporals.format(m.dataVencimentoCnh, 'dd/MM/yyyy')}"></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6" th:if="${alertasVeiculos != null and !alertasVeiculos.isEmpty()}">
+                    <div class="card border-0 shadow-sm border-start border-5 border-warning rounded-4 mb-3 bg-white">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-warning">🔧 Frota Parada</h6>
+                            <p class="small text-muted mb-2">Existem <strong th:text="${alertasVeiculos.size()}"></strong> veículo(s) em manutenção:</p>
+                            <ul class="list-unstyled mb-0 small text-muted overflow-auto" style="max-height: 90px; scrollbar-width: thin;">
+                                <li th:each="v : ${alertasVeiculos}" class="mb-1">
+                                    🔧 <strong th:text="${v.placa}"></strong> (<span th:text="${v.marcaModelo}"></span>)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="text-secondary fw-bold mb-3"><i class="bi bi-gear-fill text-muted me-2"></i> Resumo Operacional</h5>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 text-white h-100" style="background-color: #0d6efd;">
+                        <div class="card-body p-4 text-center">
+                            <h1 class="display-4 fw-bold mb-0" th:text="${totalMotoristas ?: '0'}">0</h1>
+                            <h6 class="mb-3">Motoristas</h6>
+                            <a th:href="@{/motoristas}" class="btn btn-light btn-sm fw-bold rounded-pill text-primary w-100 shadow-sm">Ver Equipe</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 text-white h-100" style="background-color: #198754;">
+                        <div class="card-body p-4 text-center">
+                            <h1 class="display-4 fw-bold mb-0" th:text="${totalVeiculos ?: '0'}">0</h1>
+                            <h6 class="mb-3">Veículos</h6>
+                            <a th:href="@{/veiculos}" class="btn btn-light btn-sm fw-bold rounded-pill text-success w-100 shadow-sm">Ver Frota</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 text-white h-100" style="background-color: #6c757d;">
+                        <div class="card-body p-4 text-center">
+                            <h1 class="display-4 fw-bold mb-0" th:text="${totalViagens ?: '0'}">0</h1>
+                            <h6 class="mb-3">Viagens (OS)</h6>
+                            <a th:href="@{/fretes}" class="btn btn-light btn-sm fw-bold rounded-pill text-secondary w-100 shadow-sm">Ver Viagens</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div> <h5 class="text-white fw-bold mb-3 mt-5 text-shadow"><i class="bi bi-speedometer2 text-warning me-2"></i> Atualização Rápida de KM da Frota</h5>
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="glass-form-container p-4 shadow-lg">
+                    <form th:action="@{/veiculos/atualizar-km-rapido}" method="POST" class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-light">Veículo (Placa)</label>
+                            <select class="form-select form-select-lg bg-light" name="veiculoId" required>
+                                <option value="">Selecione o Veículo...</option>
+                                <option th:if="${veiculos != null}" th:each="v : ${veiculos}" th:value="${v.id}" th:text="${v.placa} + ' (' + ${v.marcaModelo} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-light">Quilometragem Atual</label>
+                            <input type="number" class="form-control form-control-lg bg-light" name="quilometragemAtual" placeholder="Digite a KM" required>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-warning btn-lg fw-bold rounded-pill shadow">Atualizar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="text-white fw-bold mb-3 mt-5 text-shadow"><i class="bi bi-geo-alt-fill text-info me-2"></i> Viagens em Tempo Real (Live tracking)</h5>
+        
+        <div class="d-flex gap-3 overflow-auto pb-4 pt-1 px-1" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.4) transparent;">
+            
+            <div th:if="${#lists.isEmpty(viagensAtivas)}" class="w-100">
+                <div class="alert glass-trip-card text-center text-white border-0 shadow-sm py-4">
+                    <i class="bi bi-truck-flatbed fs-1 d-block mb-2 text-white-50"></i>
+                    <h6 class="mb-0 fw-bold">Nenhuma viagem em andamento.</h6>
+                    <p class="small text-white-50 mb-0">As OS com status "Em Viagem" aparecerão aqui.</p>
+                </div>
+            </div>
+
+            <div class="card glass-trip-card shadow border-0 text-white flex-shrink-0" style="width: 350px;" th:each="v : ${viagensAtivas}">
+                <div class="card-body p-4 d-flex flex-column h-100">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-uppercase text-info mb-0 fw-bold" th:text="'OS #' + ${v.id}">OS #325</h6>
+                        <span class="badge rounded-pill fw-bold" 
+                              th:classappend="${v.status == 'Em Viagem' or v.status == 'EM_TRANSITO' ? 'bg-success' : 'bg-warning text-dark'}"
+                              th:text="${v.status == 'EM_TRANSITO' ? '🚚 EM VIAGEM' : (v.status == 'Em Viagem' ? '🚚 EM VIAGEM' : '🕒 AGUARDANDO')}">
+                            🚚 EM VIAGEM
+                        </span>
+                    </div>
+                    
+                    <p class="mb-1 fw-bold text-light text-truncate" title="Material">
+                        CARGA: <span class="fw-normal text-white" th:text="${v.materialTransportado != null and v.materialTransportado != '' ? v.materialTransportado : 'Não informada'}">Sofá, Televisão...</span>
+                    </p>
+                    
+                    <div class="row mt-4 mb-4 align-items-center flex-grow-1">
+                        <div class="col-5">
+                            <small class="text-white-50 d-block">Origem:</small>
+                            <strong class="text-truncate d-block" th:text="${v.origem}">Rio de Janeiro</strong>
+                        </div>
+                        <div class="col-2 text-center">
+                            <i class="bi bi-arrow-right-short text-info fs-3"></i>
+                        </div>
+                        <div class="col-5 text-end">
+                            <small class="text-white-50 d-block">Destino:</small>
+                            <strong class="text-truncate d-block" th:text="${v.destino}">Jequié, BA</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12 text-end border-top border-secondary pt-3 mt-auto">
+                        <a th:href="@{/fretes/editar/{id}(id=${v.id})}" class="btn btn-outline-info btn-sm rounded-pill fw-bold">
+                            Ver Rota <i class="bi bi-chevron-right me-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+    </main>
+       
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

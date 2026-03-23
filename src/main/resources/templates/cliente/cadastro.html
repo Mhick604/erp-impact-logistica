@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<!-- 1. PUXA O CABEÇALHO MESTRE -->
+<head th:replace="~{fragments/base :: head('Cadastro de Cliente')}"></head>
+
+<body class="bg-light">
+
+    <!-- 2. PUXA O MENU LATERAL MESTRE -->
+    <div th:replace="~{fragments/menu :: sidebar('clientes')}"></div>
+
+    <div class="container mt-5 pt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow border-0 rounded-4">
+                    
+                    <!-- CABEÇALHO DINÂMICO COM COR CAMALEÃO -->
+                    <div class="card-header p-3 text-white rounded-top-4" 
+                         th:style="'background-color:' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important;'">
+                        <h4 class="mb-0">
+                            <i class="bi bi-building"></i> 
+                            <span th:text="${cliente.id == null ? ' Novo Cliente (Embarcador)' : ' Editar Cliente'}"></span>
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body p-4 p-md-5">
+                        <form th:action="@{/clientes/salvar}" th:object="${cliente}" method="POST">
+                            <input type="hidden" th:field="*{id}">
+                            
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-secondary">Razão Social / Nome</label>
+                                    <input type="text" class="form-control bg-light" th:field="*{razaoSocial}" required>
+                                </div>
+                                
+								<div class="col-md-6">
+								    <label class="form-label fw-bold text-secondary">CPF / CNPJ</label>
+								    <input type="text" class="form-control bg-light mask-cpf-cnpj" th:field="*{cnpj}" required>
+								</div>
+
+								<div class="col-md-6">
+								    <label class="form-label fw-bold text-secondary">WhatsApp</label> 
+								    <input type="text" class="form-control bg-light mask-telefone" th:field="*{telefoneWhatsapp}" required>
+								</div>
+                                
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-secondary">Endereço Completo</label>
+                                    <input type="text" class="form-control bg-light" th:field="*{endereco}">
+                                </div>
+                                
+                                <div class="col-12 mt-5 text-end border-top pt-4">
+                                    <a th:href="@{/clientes}" class="btn btn-outline-secondary rounded-pill px-4 me-2 fw-bold">Cancelar</a>
+                                    
+                                    <!-- BOTÃO COM COR CAMALEÃO -->
+                                    <button type="submit" class="btn rounded-pill px-5 shadow-sm text-white fw-bold"
+                                            th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#198754'}) + ' !important; border: none;'">
+                                        Salvar Cliente
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. PUXA OS SCRIPTS MESTRES -->
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

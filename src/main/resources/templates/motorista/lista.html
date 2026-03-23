@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Quadro de Motoristas')}"></head>
+<body class="bg-light text-dark">
+
+    <div th:replace="~{fragments/menu :: sidebar('motoristas')}"></div>
+
+    <!-- 1. CORREÇÃO: WRAPPER RESPONSIVO -->
+    <div class="content-wrapper">
+        
+        <div class="container-fluid" style="max-width: 1200px;">
+            
+            <!-- 2. CORREÇÃO: CABEÇALHO EM COLUNA NO CELULAR, LINHA NO PC -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2 class="text-secondary fw-bold mb-1">👨‍✈️ Quadro de Motoristas e Ajudantes</h2>
+                    <p class="text-muted mb-0">Gerencie sua equipe operacional.</p>
+                </div>
+                
+                <!-- BOTÃO ESTICADO NO CELULAR (d-grid) -->
+                <div class="d-grid d-md-block">
+                    <a th:href="@{/motoristas/novo}" class="btn text-white rounded-pill px-4 shadow-sm fw-bold py-2"
+                       th:style="'background-color: ' + (${configApp != null ? configApp.corPrimaria : '#212529'}) + ' !important; border: none;'">
+                        <i class="bi bi-plus-lg me-1"></i> Novo Membro
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        
+                        <!-- 3. CORREÇÃO: TABELA COM TEXT-NOWRAP -->
+                        <table class="table table-hover align-middle mb-0 text-nowrap">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-4">Nome / Cargo</th>
+                                    <th>CNH / Categoria</th>
+                                    <th>Vencimento</th>
+                                    <th>Status</th>
+                                    <th class="text-center pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="m : ${motoristas}">
+                                    <td class="ps-4">
+                                        <!-- AQUI É A MÁGICA DA EXIBIÇÃO DO CARGO -->
+                                        <div class="d-flex align-items-center mb-1">
+                                            <strong class="text-dark mb-0 fs-6" th:text="${m.nome}">João Silva</strong>
+                                            
+                                            <span class="badge ms-2" 
+                                                  th:classappend="${m.cargo == 'Motorista' ? 'bg-primary' : (m.cargo == 'Ajudante' ? 'bg-warning text-dark' : 'bg-secondary')}"
+                                                  th:text="${m.cargo ?: 'Sem Cargo'}">Motorista</span>
+                                        </div>
+                                        <small class="text-muted" th:text="${m.cpf}">123.456.789-10</small>
+                                    </td>
+                                    <td>
+                                        <span th:text="${m.cnhNumero}"></span> 
+                                        <span class="badge bg-light text-dark border" th:text="${m.cnhCategoria}"></span>
+                                    </td>
+                                    <td th:text="${m.dataVencimentoCnh != null ? #temporals.format(m.dataVencimentoCnh, 'dd/MM/yyyy') : '---'}"></td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-success" th:if="${m.status == 'Disponível'}">Disponível</span>
+                                        <span class="badge rounded-pill bg-warning text-dark" th:if="${m.status == 'Em Viagem'}">Em Viagem</span>
+                                        <span class="badge rounded-pill bg-secondary" th:if="${m.status == 'Férias'}">Férias</span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <a th:href="@{/motoristas/editar/{id}(id=${m.id})}" class="btn btn-sm btn-outline-primary rounded-circle me-1 shadow-sm" title="Editar"><i class="bi bi-pencil"></i></a>
+                                        <a th:href="@{/motoristas/excluir/{id}(id=${m.id})}" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" onclick="return confirm('Excluir membro da equipe?')" title="Excluir"><i class="bi bi-trash"></i></a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(motoristas)}">
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-person-x fs-1 d-block mb-2 text-secondary"></i>
+                                        Nenhum membro da equipe cadastrado.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+</body>
+</html>

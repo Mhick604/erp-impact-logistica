@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Registrar Manutenção')}"></head>
+<body class="bg-light text-dark">
+
+    <div th:replace="~{fragments/menu :: sidebar('veiculos')}"></div>
+
+    <!-- 1. CORREÇÃO: WRAPPER RESPONSIVO EM VEZ DE MARGEM FIXA -->
+    <div class="content-wrapper">
+        <div class="container" style="max-width: 900px;">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-primary text-white p-3 rounded-top-4">
+                    <h4 class="mb-0"><i class="bi bi-tools"></i> Registrar Serviço: <span th:text="${veiculo.placa}"></span></h4>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form th:action="@{/manutencoes/salvar}" th:object="${manutencao}" method="POST">
+                        <input type="hidden" th:field="*{id}">
+                        <!-- MUITO IMPORTANTE: Envia o ID do veículo escondido! -->
+                        <input type="hidden" name="veiculo.id" th:value="${veiculo.id}">
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Tipo de Manutenção</label>
+                                <select class="form-select form-select-lg bg-light" th:field="*{tipo}" required>
+                                    <option value="Preventiva">🟢 Preventiva (Óleo, Revisão)</option>
+                                    <option value="Corretiva">🔴 Corretiva (Quebrou, Bateu)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Status</label>
+                                <select class="form-select form-select-lg bg-light fw-bold" th:field="*{status}">
+                                    <option value="Agendada">Agendada</option>
+                                    <option value="Em Andamento">Em Andamento</option>
+                                    <option value="Concluída">✅ Concluída (Gera Despesa)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-secondary">Descrição do Serviço</label>
+                                <input type="text" class="form-control form-control-lg bg-light" th:field="*{servico}" placeholder="Ex: Troca de óleo, filtros e lona de freio" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Oficina / Mecânico</label>
+                                <input type="text" class="form-control form-control-lg bg-light" th:field="*{oficina}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Data do Serviço</label>
+                                <input type="date" class="form-control form-control-lg bg-light" th:field="*{dataManutencao}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">KM do Veículo (Painel)</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.1" class="form-control bg-light" th:field="*{quilometragem}">
+                                    <span class="input-group-text bg-secondary text-white">KM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Valor Total (R$)</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-danger text-white">R$</span>
+                                    <input type="number" step="0.01" class="form-control bg-light text-danger fw-bold" th:field="*{valorTotal}" placeholder="0.00" required>
+                                </div>
+                                <small class="text-muted">Se "Concluída", será lançado no Financeiro.</small>
+                            </div>
+                            
+                            <!-- 2. CORREÇÃO: BOTÕES EMPILHADOS E GIGANTES NO CELULAR -->
+                            <div class="col-12 mt-5 text-end border-top pt-4 d-grid gap-2 d-md-block">
+                                <a th:href="@{/manutencoes/veiculo/{id}(id=${veiculo.id})}" class="btn btn-lg btn-outline-secondary rounded-pill px-4 me-md-2 fw-bold">Cancelar</a>
+                                <button type="submit" class="btn btn-lg btn-primary px-5 shadow-sm text-white rounded-pill fw-bold">Salvar Manutenção</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="~{fragments/base :: scripts}"></div>
+</body>
+</html>

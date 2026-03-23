@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Agenda de Viagens')}"></head>
+<body class="bg-light text-dark" onload="initCalendar();">
+
+    <div th:replace="~{fragments/menu :: sidebar('agenda')}"></div>
+
+    <style>
+        .flip-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 65vh;
+            perspective: 1000px;
+            padding: 20px;
+        }
+        
+        /* Ajuste do tamanho do cartão com Responsividade (MAIS LARGO PARA CABER OS BOTÕES) */
+        .card-3d {
+            width: 100%;
+            max-width: 720px; /* Antes era 650px */
+            height: 320px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .back, .front {
+            border-radius: 12px;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .front { background-color: #212529; display: flex; flex-direction: row; }
+        .back { transform: rotateY(180deg); background-color: #212529; }
+
+        /* LADO ESQUERDO: OS DIAS DO MÊS (AJUSTADO PARA 58%) */
+        .month {
+            height: 100%;
+            width: 58%; 
+            padding: 20px;
+            display: flex;
+            align-items: center; 
+        }
+        
+        .month table { width: 100%; text-align: center; table-layout: fixed; } 
+        .month tr { height: 35px; }
+        .month th, .month td { font-size: 13px; font-weight: 600; padding: 2px 0;}
+        
+        .primaryTr th { color: #0d6efd; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;} 
+        .whiteTr td { color: #ECECE7; cursor: pointer; }
+        
+        .whiteTr td span { 
+            display: inline-block; width: 28px; height: 28px; line-height: 28px; 
+            border-radius: 50%; transition: .3s ease;
+        }
+        .whiteTr td span:hover { color: #fff; background-color: #0d6efd; }
+        .hoje-destaque { background-color: #198754 !important; color: white !important; box-shadow: 0 0 10px rgba(25, 135, 84, 0.5); }
+
+        /* LADO DIREITO: DATA E NAVEGAÇÃO (AJUSTADO PARA 42%) */
+        .date {
+            height: 100%;
+            width: 42%; 
+            background: linear-gradient(135deg, #0d6efd, #0a58ca); 
+            border-radius: 0 12px 12px 0;
+            text-align: right;
+            padding: 20px 25px; /* Um pouco mais de padding nas bordas */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end; 
+        }
+
+        #date-num { font-size: 65px; color: #ffffff; font-weight: 700; line-height: 1; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        #day-text { font-size: 16px; color: rgba(255,255,255,0.9); font-weight: 500; text-transform: uppercase; letter-spacing: 1px;}
+        
+        /* ==================================================== */
+        /* MÁGICA DOS BOTÕES DE SELEÇÃO E JANELA TRANSPARENTE   */
+        /* ==================================================== */
+        .month-nav {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 5px; /* Diminuí um pouquinho o gap para garantir alinhamento */
+            margin-top: 10px; position: relative; width: 100%;
+        }
+        .month-nav i.nav-arrow {
+            font-size: 14px; color: #fff; background: rgba(255,255,255,0.2);
+            border-radius: 50%; width: 24px; height: 24px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;
+        }
+        .month-nav i.nav-arrow:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+
+        .picker-btn {
+            cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: 0.3s;
+            display: flex; align-items: center; gap: 4px; font-size: 13px;
+            color: rgba(255,255,255,0.9); font-weight: bold; text-transform: uppercase;
+        }
+        .picker-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+        .picker-btn i { font-size: 10px !important; margin: 0; padding: 0; }
+
+        /* A Janela Estilo Dashboard (Vidro Fosco) */
+        .glass-popover {
+            position: absolute; top: 40px; right: -10px;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+            padding: 15px; z-index: 100; width: 240px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: default;
+        }
+        
+        .grid-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        
+        .picker-item {
+            color: white; font-size: 12px; text-align: center; padding: 8px 0;
+            border-radius: 6px; cursor: pointer; background: rgba(255,255,255,0.05);
+            transition: 0.2s; font-weight: 500;
+        }
+        .picker-item:hover { background: #0d6efd; color: #fff; }
+        .picker-item.active { background: #198754; color: #fff; font-weight: bold; box-shadow: 0 0 8px rgba(25,135,84,0.5); }
+
+        /* A PARTE DE TRÁS DO CARTÃO (VIAGENS) */
+        .flipped { transform: rotateY(-180deg); }
+        .backcontainer {
+            width: calc(100% - 40px); height: calc(100% - 40px); margin: 20px;
+            background-color: #0d6efd; border-radius: 8px; padding: 20px; box-sizing: border-box; color: white; overflow-y: auto;
+        }
+        .backcontainer::-webkit-scrollbar { width: 6px; }
+        .backcontainer::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px;}
+        .backcontainer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px;}
+        
+        .evento-item {
+            background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 6px;
+            margin-bottom: 10px; border-left: 4px solid #fff; display: flex; justify-content: space-between; align-items: center;
+        }
+        .evento-item:hover { background: rgba(255,255,255,0.2); }
+        .hint-text { text-align: center; color: #6c757d; font-size: 14px; margin-top: 20px; font-weight: 500;}
+    </style>
+
+    <div class="content-wrapper">
+        <div class="container-fluid" style="max-width: 1400px; padding-top: 2rem;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-calendar3 text-primary me-2"></i>Agenda Operacional
+                    </h2>
+                    <p class="text-muted mb-0">Navegue pelas datas e clique no cartão para ver as viagens.</p>
+                </div>
+            </div>
+
+            <div class="flip-wrapper">
+                <div class="card-3d" id="card3d" onclick="flipCard()">
+                    
+                    <div class="front">
+                        <div class="month">
+                            <table id="tabelaDias">
+                                <thead class="primaryTr">
+                                    <tr><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr>
+                                </thead>
+                                <tbody id="corpoTabelaDias">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="date">
+                            <div id="date-num">--</div>
+                            <div id="day-text">--</div>
+                            
+                            <div class="month-nav">
+                                <i class="bi bi-chevron-left nav-arrow" onclick="mudarMes(-1, event)"></i>
+                                
+                                <div class="picker-btn" onclick="togglePicker('month-picker', event)">
+                                    <span id="month-text">MÊS</span> <i class="bi bi-caret-down-fill"></i>
+                                </div>
+                                <span style="color: rgba(255,255,255,0.3);">|</span>
+                                <div class="picker-btn" onclick="togglePicker('year-picker', event)">
+                                    <span id="year-text">ANO</span> <i class="bi bi-caret-down-fill"></i>
+                                </div>
+
+                                <i class="bi bi-chevron-right nav-arrow" onclick="mudarMes(1, event)"></i>
+
+                                <div id="month-picker" class="glass-popover d-none" onclick="event.stopPropagation()">
+                                    <div class="grid-picker" id="grid-meses"></div>
+                                </div>
+
+                                <div id="year-picker" class="glass-popover d-none" onclick="event.stopPropagation()">
+                                    <div class="grid-picker" id="grid-anos"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="back">
+                        <div class="backcontainer">
+                            <h5 id="titulo-back" class="fw-bold mb-3 border-bottom border-light pb-2"><i class="bi bi-truck"></i> Viagens do Mês</h5>
+                            <div id="listaViagens">
+                                <div class="text-center mt-4">
+                                    <div class="spinner-border text-light spinner-border-sm" role="status"></div> Carregando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <p class="hint-text"><i class="bi bi-hand-index-thumb"></i> Experimente clicar nos botões Mês ou Ano.</p>
+
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/base :: scripts}"></div>
+
+    <script>
+        let dataVisualizacao = new Date();
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const nomesMesesCurto = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+        // -----------------------------------------------------
+        // LÓGICA DAS JANELAS TRANSPARENTES (POPOVERS)
+        // -----------------------------------------------------
+        
+        // Esconde as janelas se o utilizador clicar em qualquer lugar fora delas
+        document.addEventListener("click", function() {
+            document.getElementById("month-picker").classList.add("d-none");
+            document.getElementById("year-picker").classList.add("d-none");
+        });
+
+        // Abre a janela de seleção
+        function togglePicker(id, event) {
+            event.stopPropagation(); // Impede o cartão de virar
+            let elem = document.getElementById(id);
+            let isHidden = elem.classList.contains("d-none");
+            
+            // Fecha ambas antes de abrir a certa
+            document.getElementById("month-picker").classList.add("d-none");
+            document.getElementById("year-picker").classList.add("d-none");
+            
+            if (isHidden) {
+                renderPickers(); // Desenha a grelha antes de mostrar
+                elem.classList.remove("d-none");
+            }
+        }
+
+        // Desenha os botõezinhos dentro da janela transparente
+        function renderPickers() {
+            const mesAtual = dataVisualizacao.getMonth();
+            const anoAtual = dataVisualizacao.getFullYear();
+
+            // Renderiza Meses
+            let htmlMeses = "";
+            for(let i=0; i<12; i++) {
+                let active = (i === mesAtual) ? "active" : "";
+                htmlMeses += `<div class="picker-item ${active}" onclick="selecionarMes(${i}, event)">${nomesMesesCurto[i]}</div>`;
+            }
+            document.getElementById("grid-meses").innerHTML = htmlMeses;
+
+            // Renderiza Anos (Pega o ano atual e mostra 5 anos para trás e 6 para a frente)
+            let htmlAnos = "";
+            let anoBase = new Date().getFullYear() - 5; 
+            for(let i=0; i<12; i++) {
+                let anoLoop = anoBase + i;
+                let active = (anoLoop === anoAtual) ? "active" : "";
+                htmlAnos += `<div class="picker-item ${active}" onclick="selecionarAno(${anoLoop}, event)">${anoLoop}</div>`;
+            }
+            document.getElementById("grid-anos").innerHTML = htmlAnos;
+        }
+
+        function selecionarMes(m, event) {
+            event.stopPropagation();
+            dataVisualizacao.setMonth(m);
+            fecharPickersEAtualizar();
+        }
+
+        function selecionarAno(a, event) {
+            event.stopPropagation();
+            dataVisualizacao.setFullYear(a);
+            fecharPickersEAtualizar();
+        }
+
+        function fecharPickersEAtualizar() {
+            document.getElementById("month-picker").classList.add("d-none");
+            document.getElementById("year-picker").classList.add("d-none");
+            
+            let card = document.getElementById("card3d");
+            if (card.classList.contains("flipped")) { card.classList.remove("flipped"); }
+            initCalendar();
+        }
+
+        // -----------------------------------------------------
+        // LÓGICA DO CARTÃO E DO CALENDÁRIO
+        // -----------------------------------------------------
+
+        function mudarMes(direcao, event) {
+            event.stopPropagation(); 
+            dataVisualizacao.setMonth(dataVisualizacao.getMonth() + direcao);
+            
+            let card = document.getElementById("card3d");
+            if (card.classList.contains("flipped")) { card.classList.remove("flipped"); }
+            initCalendar(); 
+        }
+
+        function flipCard() {
+            // Se as janelas estiverem abertas, clicar no cartão apenas fecha as janelas
+            if (!document.getElementById("month-picker").classList.contains("d-none") || 
+                !document.getElementById("year-picker").classList.contains("d-none")) {
+                return; 
+            }
+
+            let card = document.getElementById("card3d");
+            card.classList.toggle("flipped");
+            
+            if (card.classList.contains("flipped")) {
+                carregarViagensDoMes();
+            }
+        }
+
+        function initCalendar() {
+            const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+            
+            const realHoje = new Date();
+            const diaReal = realHoje.getDate();
+            const mesReal = realHoje.getMonth();
+            const anoReal = realHoje.getFullYear();
+
+            const mesVisao = dataVisualizacao.getMonth();
+            const anoVisao = dataVisualizacao.getFullYear();
+
+            // Atualiza Textos
+            document.getElementById('date-num').innerText = (diaReal < 10 ? '0' : '') + diaReal;
+            document.getElementById('day-text').innerText = diasSemana[realHoje.getDay()];
+            
+            // SEPAROU MÊS E ANO NOS BOTÕES
+            document.getElementById('month-text').innerText = meses[mesVisao];
+            document.getElementById('year-text').innerText = anoVisao;
+
+            document.getElementById('titulo-back').innerHTML = `<i class="bi bi-truck"></i> Viagens de ${meses[mesVisao]} / ${anoVisao}`;
+
+            const primeiroDiaDoMes = new Date(anoVisao, mesVisao, 1).getDay();
+            const totalDiasNoMes = new Date(anoVisao, mesVisao + 1, 0).getDate(); 
+
+            let corpoTabela = document.getElementById('corpoTabelaDias');
+            let dataContador = 1;
+            let htmlTr = "";
+
+            for (let i = 0; i < 6; i++) {
+                let linhaHtml = "<tr class='whiteTr'>";
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < primeiroDiaDoMes) {
+                        linhaHtml += "<td></td>"; 
+                    } else if (dataContador > totalDiasNoMes) {
+                        linhaHtml += "<td></td>"; 
+                    } else {
+                        let isMesmoMesEAno = (mesVisao === mesReal && anoVisao === anoReal);
+                        let classeHoje = (isMesmoMesEAno && dataContador === diaReal) ? "hoje-destaque" : "";
+                        linhaHtml += `<td><span class="${classeHoje}">${dataContador}</span></td>`;
+                        dataContador++;
+                    }
+                }
+                linhaHtml += "</tr>";
+                htmlTr += linhaHtml;
+                if (dataContador > totalDiasNoMes) break; 
+            }
+            corpoTabela.innerHTML = htmlTr;
+        }
+
+        async function carregarViagensDoMes() {
+            const listaDiv = document.getElementById('listaViagens');
+            listaDiv.innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-light spinner-border-sm" role="status"></div> Buscando dados...</div>';
+            
+            try {
+                const response = await fetch('/api/agenda/eventos');
+                const eventos = await response.json();
+                
+                const mesVisaoStr = String(dataVisualizacao.getMonth() + 1).padStart(2, '0');
+                const anoVisaoStr = String(dataVisualizacao.getFullYear());
+                
+                const viagensDesteMes = eventos.filter(ev => {
+                    if (!ev.start) return false;
+                    const partesData = ev.start.split('-'); 
+                    return partesData[1] === mesVisaoStr && partesData[0] === anoVisaoStr;
+                });
+
+                if (viagensDesteMes.length === 0) {
+                    listaDiv.innerHTML = "<p class='mt-3 text-center'><i class='bi bi-inbox fs-1 text-white-50 d-block'></i> Nenhuma viagem programada.</p>";
+                    return;
+                }
+
+                let html = "";
+                viagensDesteMes.forEach(ev => {
+                    let dataFormatada = ev.start.split('-').reverse().join('/');
+                    html += `
+                        <div class="evento-item" style="border-left-color: ${ev.color};">
+                            <div>
+                                <strong class="d-block">${ev.title}</strong>
+                                <small style="color: rgba(255,255,255,0.7);"><i class="bi bi-calendar-event"></i> Saída: ${dataFormatada}</small>
+                            </div>
+                            <a href="${ev.url}" class="btn btn-sm btn-light rounded-pill px-3 fw-bold" onclick="event.stopPropagation();">
+                                Ver OS
+                            </a>
+                        </div>
+                    `;
+                });
+                
+                listaDiv.innerHTML = html;
+
+            } catch (error) {
+                listaDiv.innerHTML = "<p class='mt-3 text-warning'><i class='bi bi-exclamation-triangle'></i> Erro ao carregar viagens.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
