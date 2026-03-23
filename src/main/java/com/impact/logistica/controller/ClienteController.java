@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.impact.logistica.model.Cliente;
 import com.impact.logistica.repository.ClienteRepository;
 import com.impact.logistica.repository.ConfiguracaoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/clientes")
@@ -47,8 +49,14 @@ public class ClienteController {
     }
 
     @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id) {
+public String excluir(@PathVariable Long id, RedirectAttributes attributes) {
+    try {
+        // Tenta excluir o cliente
         clienteRepository.deleteById(id);
-        return "redirect:/clientes";
+        attributes.addFlashAttribute("mensagem", "Cliente excluído com sucesso!");
+    } catch (DataIntegrityViolationException e) {
+        // Se o banco bloquear por causa de um Frete, envia esta mensagem de erro:
+        attributes.addFlashAttribute("erro", "Atenção: Este cliente possui fretes (viagens) registrados e não pode ser apagado do sistema.");
     }
+    return "redirect:/clientes"; // Garanta que esta é a rota certa para voltar à lista
 }
